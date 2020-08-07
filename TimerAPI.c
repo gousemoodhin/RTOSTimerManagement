@@ -1,13 +1,13 @@
 // Header Files
-#include <stdio.h>
-#include <stdlib.h>
+#include "TimerAPI.h"
+#include "TimerMgrHeader.h"
+#include "TypeDefines.h"
 #include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
-#include "TypeDefines.h"
-#include "TimerMgrHeader.h"
-#include "TimerAPI.h"
 
 /*****************************************************
  * Global Variables
@@ -44,8 +44,9 @@ pthread_mutex_t timer_pool_mutex;
   @RTOSTmrCreate().
   Create timer and fill the timer object.
 */
-RTOS_TMR* RTOSTmrCreate(INT32U delay, INT32U period, INT8U option, RTOS_TMR_CALLBACK callback,
-                        void *callback_arg, INT8 *name, INT8U *err) {
+RTOS_TMR *RTOSTmrCreate(INT32U delay, INT32U period, INT8U option,
+                        RTOS_TMR_CALLBACK callback, void *callback_arg,
+                        INT8 *name, INT8U *err) {
 
   if (FreeTmrCount == 0) {
     *err = RTOS_ERR_NONE;
@@ -56,7 +57,7 @@ RTOS_TMR* RTOSTmrCreate(INT32U delay, INT32U period, INT8U option, RTOS_TMR_CALL
   if (option == RTOS_TMR_PERIODIC || option == RTOS_TMR_ONE_SHOT) {
     if (option == RTOS_TMR_ONE_SHOT && delay == 0) {
       *err = RTOS_ERR_TMR_INVALID_DLY;
-       return NULL;
+      return NULL;
     }
     if (option == RTOS_TMR_PERIODIC && period == 0) {
       *err = RTOS_ERR_TMR_INVALID_PERIOD;
@@ -64,22 +65,22 @@ RTOS_TMR* RTOSTmrCreate(INT32U delay, INT32U period, INT8U option, RTOS_TMR_CALL
     }
     // Allocate timer obj.
     timer_obj = alloc_timer_obj();
-    if(timer_obj == NULL) {
+    if (timer_obj == NULL) {
       *err = RTOS_ERR_TMR_NON_AVAIL;
       return NULL;
     }
 
     // Fill up the timer object.
-    timer_obj->RTOSTmrCallback    = callback;
+    timer_obj->RTOSTmrCallback = callback;
     timer_obj->RTOSTmrCallbackArg = callback_arg;
-    timer_obj->RTOSTmrNext        = NULL;
-    timer_obj->RTOSTmrPrev        = NULL;
-    timer_obj->RTOSTmrMatch       = 0;
-    timer_obj->RTOSTmrDelay       = delay;
-    timer_obj->RTOSTmrPeriod      = period;
-    timer_obj->RTOSTmrName        = name;
-    timer_obj->RTOSTmrOpt         = option;
-    timer_obj->RTOSTmrState       = RTOS_TMR_STATE_STOPPED;
+    timer_obj->RTOSTmrNext = NULL;
+    timer_obj->RTOSTmrPrev = NULL;
+    timer_obj->RTOSTmrMatch = 0;
+    timer_obj->RTOSTmrDelay = delay;
+    timer_obj->RTOSTmrPeriod = period;
+    timer_obj->RTOSTmrName = name;
+    timer_obj->RTOSTmrOpt = option;
+    timer_obj->RTOSTmrState = RTOS_TMR_STATE_STOPPED;
     *err = RTOS_SUCCESS;
   } else {
     *err = RTOS_ERR_TMR_INVALID_OPT;
@@ -94,13 +95,13 @@ RTOS_TMR* RTOSTmrCreate(INT32U delay, INT32U period, INT8U option, RTOS_TMR_CALL
 */
 INT8U RTOSTmrDel(RTOS_TMR *ptmr, INT8U *perr) {
   // ERROR checking.
-  if(ptmr == NULL) {
-    fprintf(stdout,"\nTimer pointer is NULL\n");
+  if (ptmr == NULL) {
+    fprintf(stdout, "\nTimer pointer is NULL\n");
     *perr = RTOS_ERR_TMR_INVALID;
     return RTOS_FALSE;
   }
-  if(ptmr->RTOSTmrType != RTOS_TMR_TYPE) {
-    fprintf(stdout,"\nTimer type is not RTOS_TMR_TYPE\n");
+  if (ptmr->RTOSTmrType != RTOS_TMR_TYPE) {
+    fprintf(stdout, "\nTimer type is not RTOS_TMR_TYPE\n");
     *perr = RTOS_ERR_TMR_INVALID_TYPE;
     return RTOS_FALSE;
   }
@@ -116,7 +117,7 @@ INT8U RTOSTmrDel(RTOS_TMR *ptmr, INT8U *perr) {
     free_timer_obj(ptmr);
   } else {
     *perr = RTOS_ERR_TMR_INVALID_STATE;
-    fprintf(stdout,"\n %s is not deleted with state = %d\n",
+    fprintf(stdout, "\n %s is not deleted with state = %d\n",
             RTOSTmrNameGet(ptmr, perr), ptmr->RTOSTmrState);
     return RTOS_FALSE;
   }
@@ -129,17 +130,17 @@ INT8U RTOSTmrDel(RTOS_TMR *ptmr, INT8U *perr) {
   @ RTOSTmrNameGet().
   Get the name of timer.
 */
-INT8* RTOSTmrNameGet(RTOS_TMR *ptmr, INT8U *perr) {
+INT8 *RTOSTmrNameGet(RTOS_TMR *ptmr, INT8U *perr) {
   // ERROR checking.
-  if(ptmr == NULL) {
-    fprintf(stdout,"\nTimer pointer is NULL\n");
+  if (ptmr == NULL) {
+    fprintf(stdout, "\nTimer pointer is NULL\n");
     *perr = RTOS_ERR_TMR_INVALID;
     return NULL;
-  } else if(ptmr->RTOSTmrType != RTOS_TMR_TYPE) {
-    fprintf(stdout,"\nTimer type is not RTOS_TMR_TYPE\n");
-   *perr = RTOS_ERR_TMR_INVALID_TYPE;
+  } else if (ptmr->RTOSTmrType != RTOS_TMR_TYPE) {
+    fprintf(stdout, "\nTimer type is not RTOS_TMR_TYPE\n");
+    *perr = RTOS_ERR_TMR_INVALID_TYPE;
     return RTOS_FALSE;
-  } else if(ptmr->RTOSTmrState == RTOS_TMR_STATE_UNUSED) {
+  } else if (ptmr->RTOSTmrState == RTOS_TMR_STATE_UNUSED) {
     *perr = RTOS_ERR_TMR_INACTIVE;
     return NULL;
   } else {
@@ -154,20 +155,21 @@ INT8* RTOSTmrNameGet(RTOS_TMR *ptmr, INT8U *perr) {
 */
 INT32U RTOSTmrRemainGet(RTOS_TMR *ptmr, INT8U *perr) {
   // ERROR checking.
-  if(ptmr == NULL) {
-    fprintf(stdout,"\nTimer pointer is NULL\n");
+  if (ptmr == NULL) {
+    fprintf(stdout, "\nTimer pointer is NULL\n");
     *perr = RTOS_ERR_TMR_INVALID;
     return RTOS_FALSE;
-  } else if(ptmr->RTOSTmrType != RTOS_TMR_TYPE) {
-    fprintf(stdout,"\nTimer type is not RTOS_TMR_TYPE\n");
+  } else if (ptmr->RTOSTmrType != RTOS_TMR_TYPE) {
+    fprintf(stdout, "\nTimer type is not RTOS_TMR_TYPE\n");
     *perr = RTOS_ERR_TMR_INVALID_TYPE;
     return RTOS_FALSE;
-  } else if(ptmr->RTOSTmrState == RTOS_TMR_STATE_UNUSED) {
+  } else if (ptmr->RTOSTmrState == RTOS_TMR_STATE_UNUSED) {
     *perr = RTOS_ERR_TMR_INACTIVE;
     return RTOS_FALSE;
   } else {
     // Return the remaining ticks.
-    fprintf(stdout,"\nTimer remaining ticks = %d\n", (ptmr->RTOSTmrMatch - RTOSTmrTickCtr));
+    fprintf(stdout, "\nTimer remaining ticks = %d\n",
+            (ptmr->RTOSTmrMatch - RTOSTmrTickCtr));
     return (ptmr->RTOSTmrMatch - RTOSTmrTickCtr);
   }
 }
@@ -178,12 +180,12 @@ INT32U RTOSTmrRemainGet(RTOS_TMR *ptmr, INT8U *perr) {
 */
 INT8U RTOSTmrStateGet(RTOS_TMR *ptmr, INT8U *perr) {
   // ERROR checking.
-  if(ptmr == NULL) {
-    fprintf(stdout,"\nTimer pointer is NULL\n");
+  if (ptmr == NULL) {
+    fprintf(stdout, "\nTimer pointer is NULL\n");
     *perr = RTOS_ERR_TMR_INVALID;
     return RTOS_FALSE;
-  } else if(ptmr->RTOSTmrType != RTOS_TMR_TYPE) {
-    fprintf(stdout,"\nTimer type is not RTOS_TMR_TYPE\n");
+  } else if (ptmr->RTOSTmrType != RTOS_TMR_TYPE) {
+    fprintf(stdout, "\nTimer type is not RTOS_TMR_TYPE\n");
     *perr = RTOS_ERR_TMR_INVALID_TYPE;
     return RTOS_FALSE;
   } else {
@@ -194,23 +196,24 @@ INT8U RTOSTmrStateGet(RTOS_TMR *ptmr, INT8U *perr) {
 
 /*
   @ RTOSTmrStart().
-  Based on the timer state, update the RTOSTmrMatch using RTOSTmrTickCtr, RTOSTmrDelay and
-  RTOSTmrPeriod.
+  Based on the timer state, update the RTOSTmrMatch using RTOSTmrTickCtr,
+  RTOSTmrDelay and RTOSTmrPeriod.
 */
 INT8U RTOSTmrStart(RTOS_TMR *timer, INT8U *perr) {
   // ERROR checking.
-  if(timer == NULL) {
-    fprintf(stdout,"\nTimer pointer is NULL\n");
+  if (timer == NULL) {
+    fprintf(stdout, "\nTimer pointer is NULL\n");
     *perr = RTOS_ERR_TMR_INVALID;
     return RTOS_FALSE;
-  } else if(timer->RTOSTmrType != RTOS_TMR_TYPE) {
-    fprintf(stdout,"\nTimer type is not RTOS_TMR_TYPE\n");
+  } else if (timer->RTOSTmrType != RTOS_TMR_TYPE) {
+    fprintf(stdout, "\nTimer type is not RTOS_TMR_TYPE\n");
     *perr = RTOS_ERR_TMR_INVALID_TYPE;
     return RTOS_FALSE;
   } else {
     // .
     timer->RTOSTmrState = RTOS_TMR_STATE_RUNNING;
-    printf ("\nnadaf RTOSTmrTickCtr = %d timer->RTOSTmrDelay = %d\n", RTOSTmrTickCtr, timer->RTOSTmrDelay);
+    printf("\nnadaf RTOSTmrTickCtr = %d timer->RTOSTmrDelay = %d\n",
+           RTOSTmrTickCtr, timer->RTOSTmrDelay);
     timer->RTOSTmrMatch = RTOSTmrTickCtr + timer->RTOSTmrDelay;
     // You may use the Hash table to insert the running timer obj.
     insert_hash_entry(timer);
@@ -224,18 +227,18 @@ INT8U RTOSTmrStart(RTOS_TMR *timer, INT8U *perr) {
 */
 INT8U RTOSTmrStop(RTOS_TMR *ptmr, INT8U opt, void *callback_arg, INT8U *perr) {
   // ERROR checking.
-  if(ptmr == NULL) {
-    fprintf(stdout,"\nTimer pointer is NULL\n");
+  if (ptmr == NULL) {
+    fprintf(stdout, "\nTimer pointer is NULL\n");
     *perr = RTOS_ERR_TMR_INVALID;
     return RTOS_FALSE;
   }
   if (ptmr->RTOSTmrType != RTOS_TMR_TYPE) {
-    fprintf(stdout,"\nTimer type is not RTOS_TMR_TYPE\n");
+    fprintf(stdout, "\nTimer type is not RTOS_TMR_TYPE\n");
     *perr = RTOS_ERR_TMR_INVALID_TYPE;
     return RTOS_FALSE;
   }
-  if (ptmr->RTOSTmrState == RTOS_TMR_STATE_STOPPED) { 
-    fprintf(stdout,"\nTimer state is STOPPED\n");
+  if (ptmr->RTOSTmrState == RTOS_TMR_STATE_STOPPED) {
+    fprintf(stdout, "\nTimer state is STOPPED\n");
     *perr = RTOS_ERR_TMR_STOPPED;
     return RTOS_FALSE;
   }
@@ -246,17 +249,17 @@ INT8U RTOSTmrStop(RTOS_TMR *ptmr, INT8U opt, void *callback_arg, INT8U *perr) {
   ptmr->RTOSTmrState = RTOS_TMR_STATE_STOPPED;
 
   // Call callback function if required.
-  if(ptmr->RTOSTmrCallback != NULL) {
+  if (ptmr->RTOSTmrCallback != NULL) {
     if (opt == RTOS_TMR_OPT_NONE) {
-      fprintf(stdout,"\nTimer callback option = %d\n", opt);
+      fprintf(stdout, "\nTimer callback option = %d\n", opt);
     } else if (opt == RTOS_TMR_OPT_CALLBACK) {
-      fprintf(stdout,"\nTimer callback option = %d\n", opt);
+      fprintf(stdout, "\nTimer callback option = %d\n", opt);
       ptmr->RTOSTmrCallback(ptmr->RTOSTmrCallbackArg);
-    } else if (opt == RTOS_TMR_OPT_CALLBACK_ARG){
-      fprintf(stdout,"\nTimer callback option = %d\n", opt);
+    } else if (opt == RTOS_TMR_OPT_CALLBACK_ARG) {
+      fprintf(stdout, "\nTimer callback option = %d\n", opt);
       ptmr->RTOSTmrCallback(callback_arg);
     } else {
-      fprintf(stdout,"\nTimer callback option = %d\n", opt);
+      fprintf(stdout, "\nTimer callback option = %d\n", opt);
     }
   } else {
     if (ptmr->RTOSTmrCallback == NULL) {
@@ -265,14 +268,14 @@ INT8U RTOSTmrStop(RTOS_TMR *ptmr, INT8U opt, void *callback_arg, INT8U *perr) {
     } else {
       return RTOS_FALSE;
     }
-   }
+  }
   return RTOS_TRUE;
 }
 
 /*
   @ RTOSTmrSignal().
-  Function called when OS tick Interrupt occurs which will signal the RTOSTmrTask() to update
-  the timers.
+  Function called when OS tick Interrupt occurs which will signal the
+  RTOSTmrTask() to update the timers.
 */
 void RTOSTmrSignal(int signum) {
   // Send the signal to timer task using Semaphore.
@@ -283,9 +286,9 @@ void RTOSTmrSignal(int signum) {
   @ GetRTOSTimer().
   Create RTOS timer, and return its pointer.
 */
-RTOS_TMR* GetRTOSTimer() {
+RTOS_TMR *GetRTOSTimer() {
   RTOS_TMR *ptr;
-  ptr = (RTOS_TMR*)malloc(sizeof(RTOS_TMR));
+  ptr = (RTOS_TMR *)malloc(sizeof(RTOS_TMR));
   ptr->RTOSTmrPrev = NULL;
   ptr->RTOSTmrNext = NULL;
   ptr->RTOSTmrType = RTOS_TMR_TYPE;
@@ -304,22 +307,23 @@ RTOS_TMR* GetRTOSTimer() {
   - We can magine of linkedList creation for timer obj.
 */
 INT8U Create_Timer_Pool(INT32U timer_count) {
-  printf ("nadaf Create_Timer_Pool start\n");
-  printf ("nadaf Create_Timer_Pool timer_count = %d FreeTmrCount = %d\n", timer_count, FreeTmrCount);
-  if(timer_count == 0) {
-    fprintf(stdout,"\nTimer count is zero\n");
+  printf("nadaf Create_Timer_Pool start\n");
+  printf("nadaf Create_Timer_Pool timer_count = %d FreeTmrCount = %d\n",
+         timer_count, FreeTmrCount);
+  if (timer_count == 0) {
+    fprintf(stdout, "\nTimer count is zero\n");
     return RTOS_MALLOC_ERR;
   }
   FreeTmrCount = timer_count;
   FreeTmrListPtr = GetRTOSTimer();
   RTOS_TMR *tempptr = FreeTmrListPtr;
-  for(int i = 1; i < timer_count; i++) {
+  for (int i = 1; i < timer_count; i++) {
     tempptr->RTOSTmrNext = GetRTOSTimer();
     tempptr->RTOSTmrNext->RTOSTmrPrev = tempptr;
     tempptr = tempptr->RTOSTmrNext;
   }
   tempptr->RTOSTmrNext = NULL;
-   printf ("nadaf Create_Timer_Pool end\n");
+  printf("nadaf Create_Timer_Pool end\n");
   return RTOS_SUCCESS;
 }
 
@@ -330,7 +334,7 @@ INT8U Create_Timer_Pool(INT32U timer_count) {
 void init_hash_table(void) {
   printf("nadaf init_hash_table start\n");
   printf("nadaf init_hash_table HASH_TABLE_SIZE = %d\n", HASH_TABLE_SIZE);
-  for(int i = 0 ; i < HASH_TABLE_SIZE ; i++) {
+  for (int i = 0; i < HASH_TABLE_SIZE; i++) {
     hash_table[i].timer_count = 0;
     hash_table[i].list_ptr = NULL;
   }
@@ -349,24 +353,24 @@ void insert_hash_entry(RTOS_TMR *timer_obj) {
   pthread_mutex_lock(&hash_table_mutex);
 
   // Add the entry.
-  if(hash_table[index].timer_count == 0) {
+  if (hash_table[index].timer_count == 0) {
     hash_table[index].list_ptr = timer_obj;
     timer_obj->RTOSTmrNext = NULL;
   } else {
-    if((hash_table[index].list_ptr->RTOSTmrMatch >= timer_obj->RTOSTmrMatch)) {
+    if ((hash_table[index].list_ptr->RTOSTmrMatch >= timer_obj->RTOSTmrMatch)) {
       hash_table[index].list_ptr->RTOSTmrPrev = timer_obj;
       timer_obj->RTOSTmrNext = hash_table[index].list_ptr;
       hash_table[index].list_ptr = timer_obj;
     } else {
       RTOS_TMR *tempTmr = hash_table[index].list_ptr;
-      while(tempTmr->RTOSTmrNext != NULL &&
-            tempTmr->RTOSTmrNext->RTOSTmrMatch < timer_obj->RTOSTmrMatch)
+      while (tempTmr->RTOSTmrNext != NULL &&
+             tempTmr->RTOSTmrNext->RTOSTmrMatch < timer_obj->RTOSTmrMatch)
         tempTmr = tempTmr->RTOSTmrNext;
-        if(tempTmr->RTOSTmrNext != NULL)
-          tempTmr->RTOSTmrNext->RTOSTmrPrev = timer_obj;
-        timer_obj->RTOSTmrNext = tempTmr->RTOSTmrNext;
-        timer_obj->RTOSTmrPrev = tempTmr;
-        tempTmr->RTOSTmrNext = timer_obj;
+      if (tempTmr->RTOSTmrNext != NULL)
+        tempTmr->RTOSTmrNext->RTOSTmrPrev = timer_obj;
+      timer_obj->RTOSTmrNext = tempTmr->RTOSTmrNext;
+      timer_obj->RTOSTmrPrev = tempTmr;
+      tempTmr->RTOSTmrNext = timer_obj;
     }
   }
 
@@ -383,24 +387,24 @@ void remove_hash_entry(RTOS_TMR *timer_obj) {
   // Calculate the index using Hash function.
   int index = timer_obj->RTOSTmrMatch % 10;
   if (hash_table[index].timer_count == 0) {
-    fprintf(stdout,"\nNo timers in hash table at index = %d\n", index);
+    fprintf(stdout, "\nNo timers in hash table at index = %d\n", index);
     return;
   }
   // Lock resources.
   pthread_mutex_lock(&hash_table_mutex);
   // Remove the timer obj.
   RTOS_TMR *tempTmr = hash_table[index].list_ptr;
-  while(tempTmr != timer_obj && tempTmr != NULL) {
+  while (tempTmr != timer_obj && tempTmr != NULL) {
     tempTmr = tempTmr->RTOSTmrNext;
   }
-  //remove first obj.
-  if(tempTmr->RTOSTmrPrev == NULL) {
+  // remove first obj.
+  if (tempTmr->RTOSTmrPrev == NULL) {
     hash_table[index].list_ptr = tempTmr->RTOSTmrNext;
-    if(tempTmr->RTOSTmrNext) {  // it is not last obj.
+    if (tempTmr->RTOSTmrNext) { // it is not last obj.
       tempTmr->RTOSTmrNext->RTOSTmrPrev = tempTmr->RTOSTmrPrev;
     }
   } else {
-    if(tempTmr->RTOSTmrNext) {  // it is the middle obj.
+    if (tempTmr->RTOSTmrNext) { // it is the middle obj.
       tempTmr->RTOSTmrNext->RTOSTmrPrev = tempTmr->RTOSTmrPrev;
     }
     tempTmr->RTOSTmrPrev->RTOSTmrNext = tempTmr->RTOSTmrNext;
@@ -416,27 +420,30 @@ void remove_hash_entry(RTOS_TMR *timer_obj) {
 /*
   @ RTOSTmrTask().
   - Timer task to manage the running timers.
-  - If the Timer is completed, call its Callback Function, remove the entry from Hash table.
-  - If the Timer is Periodic then again insert it in the hash table change the state.
+  - If the Timer is completed, call its Callback Function, remove the entry from
+  Hash table.
+  - If the Timer is Periodic then again insert it in the hash table change the
+  state.
 */
 void *RTOSTmrTask(void *temp) {
 
-  while(1) {
-    // Wait for signal from RTOSTmrSignal(), Once get the signal, increment the timer tick counter.
+  while (1) {
+    // Wait for signal from RTOSTmrSignal(), Once get the signal, increment the
+    // timer tick counter.
     sem_wait(&timer_task_sem);
 
     // Check the whole list associated with the index of the Hash table.
     int index = RTOSTmrTickCtr % 10;
     // Compare each obj of linked list for timer completion.
     RTOS_TMR *tempTmr = hash_table[index].list_ptr;
-    while(tempTmr != NULL) {
+    while (tempTmr != NULL) {
       RTOS_TMR *timer = tempTmr;
       tempTmr = tempTmr->RTOSTmrNext;
-      if(timer->RTOSTmrMatch == RTOSTmrTickCtr) {
+      if (timer->RTOSTmrMatch == RTOSTmrTickCtr) {
         timer->RTOSTmrCallback(timer->RTOSTmrCallbackArg);
         timer->RTOSTmrState = RTOS_TMR_STATE_COMPLETED;
         remove_hash_entry(timer);
-        if(timer->RTOSTmrOpt == RTOS_TMR_ONE_SHOT) {
+        if (timer->RTOSTmrOpt == RTOS_TMR_ONE_SHOT) {
           free_timer_obj(timer);
         } else {
           timer->RTOSTmrMatch = RTOSTmrTickCtr + timer->RTOSTmrPeriod;
@@ -446,7 +453,7 @@ void *RTOSTmrTask(void *temp) {
         continue;
       } else {
         break;
-     }
+      }
     }
     RTOSTmrTickCtr++;
   }
@@ -458,11 +465,13 @@ void *RTOSTmrTask(void *temp) {
   Initialize the all timer attributes.
 */
 void RTOSTmrInit(void) {
-  INT8U	retVal;
+  INT8U retVal;
   INT32U timer_count = 0;
   pthread_attr_t attr;
 
-  fprintf(stdout,"\n\nPlease Enter the number of Timers required in the Pool for the OS ");
+  fprintf(
+      stdout,
+      "\n\nPlease Enter the number of Timers required in the Pool for the OS ");
   scanf("%d", &timer_count);
 
   // Create timer pool.
@@ -485,14 +494,14 @@ void RTOSTmrInit(void) {
 
   // Create any thread if required for timer task.
   pthread_create(&thread, NULL, RTOSTmrTask, NULL);
-  fprintf(stdout,"\nRTOS Initialization Done...\n");
+  fprintf(stdout, "\nRTOS Initialization Done...\n");
 }
 
 /*
   @ alloc_timer_obj().
   Allocate a timer object from free timer pool.
 */
-RTOS_TMR* alloc_timer_obj(void) {
+RTOS_TMR *alloc_timer_obj(void) {
   printf("nadaf alloc_timer_obj start");
   RTOS_TMR *tempTmr = NULL;
   // Lock resources.
@@ -500,13 +509,14 @@ RTOS_TMR* alloc_timer_obj(void) {
   // Check for availability of timers.
   // Assign the timer object.
   printf("nadaf alloc_timer_obj FreeTmrCount = %d\n", FreeTmrCount);
-  if(FreeTmrCount != 0) {
+  if (FreeTmrCount != 0) {
     printf("nadaf FreeTmrListPtr = %p\n", FreeTmrListPtr);
     tempTmr = FreeTmrListPtr;
-    printf("nadaf FreeTmrListPtr->RTOSTmrNext = %p\n", FreeTmrListPtr->RTOSTmrNext);
+    printf("nadaf FreeTmrListPtr->RTOSTmrNext = %p\n",
+           FreeTmrListPtr->RTOSTmrNext);
     FreeTmrListPtr = FreeTmrListPtr->RTOSTmrNext;
     tempTmr->RTOSTmrNext = NULL;
-    if(FreeTmrCount != 1)
+    if (FreeTmrCount != 1)
       FreeTmrListPtr->RTOSTmrPrev = NULL;
     FreeTmrCount--;
   }
@@ -526,15 +536,15 @@ void free_timer_obj(RTOS_TMR *ptmr) {
   // Lock resources.
   pthread_mutex_lock(&timer_pool_mutex);
   // Clear timer fields.
-  ptmr->RTOSTmrCallback    = NULL;
+  ptmr->RTOSTmrCallback = NULL;
   ptmr->RTOSTmrCallbackArg = NULL;
-  ptmr->RTOSTmrPrev        = NULL;
-  ptmr->RTOSTmrMatch       = 0;
-  ptmr->RTOSTmrDelay       = 0;
-  ptmr->RTOSTmrPeriod      = 0;
-  ptmr->RTOSTmrName        = NULL;
-  ptmr->RTOSTmrOpt         = 0;
-  ptmr->RTOSTmrNext        = FreeTmrListPtr;
+  ptmr->RTOSTmrPrev = NULL;
+  ptmr->RTOSTmrMatch = 0;
+  ptmr->RTOSTmrDelay = 0;
+  ptmr->RTOSTmrPeriod = 0;
+  ptmr->RTOSTmrName = NULL;
+  ptmr->RTOSTmrOpt = 0;
+  ptmr->RTOSTmrNext = FreeTmrListPtr;
   // Change the state.
   ptmr->RTOSTmrState = RTOS_TMR_STATE_UNUSED;
   // Return the timer to free timer pool.
@@ -547,14 +557,14 @@ void free_timer_obj(RTOS_TMR *ptmr) {
 
 /*
   @ OSTickInitialize().
-  - Function to setup the Linux timer which will provide the clock tick interrupt to the timer
-    manager module.
+  - Function to setup the Linux timer which will provide the clock tick
+  interrupt to the timer manager module.
   - struct itimerspec:
     it_value specifies the initial amount of time before the timer expires.
-    it_interval member specifies the interval after which the timer will expire again.
-    A nonzero value for the it_interval member specifies a periodic time.
-  - SIGALRM is an asynchronous signal. The SIGALRM signal is raised when a time interval specified
-    in a call to the alarm or alarmd function expires.
+    it_interval member specifies the interval after which the timer will expire
+  again. A nonzero value for the it_interval member specifies a periodic time.
+  - SIGALRM is an asynchronous signal. The SIGALRM signal is raised when a time
+  interval specified in a call to the alarm or alarmd function expires.
   - The CLOCK_REALTIME clock measures the amount of time that has elapsed since
     00:00:00 January 1, 1970 Greenwich Mean Time (GMT).
 */
@@ -563,7 +573,8 @@ void OSTickInitialize(void) {
   timer_t timer_id;
   struct itimerspec time_value;
 
-  // To arm a timer to execute 1 second from now and then at RTOS_CFG_TMR_TASK_RATE second intervals.
+  // To arm a timer to execute 1 second from now and then at
+  // RTOS_CFG_TMR_TASK_RATE second intervals.
   time_value.it_value.tv_sec = 1;
   time_value.it_value.tv_nsec = 0;
   time_value.it_interval.tv_sec = 0;
@@ -578,4 +589,3 @@ void OSTickInitialize(void) {
   timer_settime(timer_id, 0, &time_value, NULL);
   printf("nadaf OSTickInitialize end\n");
 }
-
